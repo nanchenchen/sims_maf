@@ -79,7 +79,7 @@ for f in filters:
     
 # Number of Visits per observing mode:
 for f in filters:    
-        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50},summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'CountMetric':{}, 'NOutliers':{'nsigma':3.}} )
+        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50},summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'CountMetric':{}, 'NOutliersMetric':{'nsigma':3.}, 'PercentilesMetric':{}} )
         metricDict = makeDict(m1)
         constraints=[]
         for propid in propids:
@@ -87,6 +87,8 @@ for f in filters:
         binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=constraints)
         binList.append(binner)
                                     
+binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=['']) 
+binList.append(binner)
 
 
 
@@ -121,6 +123,22 @@ for f in filters:
     binner = makeBinnerConfig('UniBinner', metricDict=makeDict(m1), constraints=['filter = "%s"'%f])
     binList.append(binner)
 
+#stats for single visit depths by filter and propID
+constraints=[]
+for f in filters:
+    constraints.append("filter = '%s'"%(f))
+    for ID in propids:
+        constraints.append("filter = '%s' and propID = %i"%(f,ID))
+constraints.append('')
+        
+m1 = makeMetricConfig('MedianMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Median'}, summaryStats={'IdentityMetric':{}})
+m2 = makeMetricConfig('MeanMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Mean'},summaryStats={'IdentityMetric':{}})
+m3 = makeMetricConfig('RmsMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Rms'},summaryStats={'IdentityMetric':{}})
+m4 = makeMetricConfig('NOutliersMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Outliers'},summaryStats={'IdentityMetric':{}})
+m5 = makeMetricConfig('CountMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Count'},summaryStats={'IdentityMetric':{}})
+metricDict = makeDict(m1,m2,m3,m4,m5)
+binner = makeBinnerConfig('UniBinner', metricDict=metricDict, constraints=constraints)
+binList.append(binner)
 
 # The merged histograms for basics 
 for f in filters:

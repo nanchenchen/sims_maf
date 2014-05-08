@@ -11,16 +11,23 @@ class SummaryMetrics(BaseMetric):
         raise NotImplementedError()
 
 
-class NOutliers(SummaryMetrics):
+class NOutliersMetric(SummaryMetrics):
     """Number of outliers. """
-    def __init__(self, colname, nsigma=3.):
+    def __init__(self, colname, nsigma=3., **kwargs):
         self.nsigma=nsigma
-        super(NOutliers,self).__init__([colname])
+        super(NOutliersMetric,self).__init__([colname], **kwargs)
+        self.colname = colname
 
     def run(self, dataSlice):
         result = np.array([np.size(np.where(dataSlice[self.colname] <  dataSlice[self.colname].mean()-self.nsigma*dataSlice[self.colname].std())[0]), np.size(np.where(dataSlice[self.colname] > dataSlice[self.colname].mean()+self.nsigma*dataSlice[self.colname].std())[0]) ])
         return result
-                                
+
+class PercentilesMetric(SummaryMetrics):
+    def __init__(self, colname, **kwargs):
+        super(SummaryMetrics, self).__init__(colname, **kwargs)
+    def run(self, dataSlice):
+        result = np.percentile(dataSlice[self.colname], [25.,50.,75.])
+        return result
                                     
 class TableFractionMetric(SimpleScalarMetric):
     def __init__(self, colname, nbins=10):

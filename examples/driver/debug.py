@@ -41,24 +41,22 @@ sky_zpoints = {'u':21.8, 'g':22., 'r':21.3, 'i':20.0, 'z':19.1, 'y':17.5}
 seeing_norm = {'u':0.77, 'g':0.73, 'r':0.7, 'i':0.67, 'z':0.65, 'y':0.63}
 
 binList=[]
-
+#stats for single visit depths by filter and propID
+constraints=[]
 for f in filters:
-    m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisits'}, 
-                          plotDict={'units':'Number of Visits', 
-                                    'histMin':nVisits_plotRange['all'][f][0],
-                                    'histMax':nVisits_plotRange['all'][f][1]})
-    m2 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'NVisitsRatio'},
-                          plotDict={'normVal':nvisitBench[f], 'ylog':False, 'units':'Number of Visits/Benchmark (%d)' %(nvisitBench[f])})
-    m3 = makeMetricConfig('MedianMetric', params=['5sigma_modified'])
-    m4 = makeMetricConfig('Coaddm5Metric', plotDict={'zp':mag_zpoints[f], 'percentileClip':95., 'units':'Co-add (m5 - %.1f)'%mag_zpoints[f]},
-                          histMerge={'histNum':6, 'legendloc':'upper right', 'color':colors[f],'label':'%s'%f} )             
-    m5 = makeMetricConfig('MedianMetric', params=['perry_skybrightness'], plotDict={'zp':sky_zpoints[f], 'units':'Skybrightness - %.2f' %(sky_zpoints[f])})
-    m6 = makeMetricConfig('MedianMetric', params=['finSeeing'], plotDict={'normVal':seeing_norm[f], 'units':'Median Seeing/(Expected seeing %.2f)'%(seeing_norm[f])})
-    m7 = makeMetricConfig('MedianMetric', params=['airmass'], plotDict={'_unit':'X'})
-    m8 = makeMetricConfig('MaxMetric', params=['airmass'], plotDict={'_unit':'X'})
-    metricDict = makeDict(m1,m2,m3,m4,m5,m6,m7,m8)
-    binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=["filter = \'%s\'"%f])
-    binList.append(binner)
+    constraints.append("filter = '%s'"%(f))
+    for ID in propids:
+        constraints.append("filter = '%s' and propID = %i"%(f,ID))
+constraints.append('')
+        
+m1 = makeMetricConfig('MedianMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Median'}, summaryStats={'IdentityMetric':{}})
+m2 = makeMetricConfig('MeanMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Mean'},summaryStats={'IdentityMetric':{}})
+m3 = makeMetricConfig('RmsMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Rms'},summaryStats={'IdentityMetric':{}})
+m4 = makeMetricConfig('NOutliersMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Outliers'},summaryStats={'IdentityMetric':{}})
+m5 = makeMetricConfig('CountMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Count'},summaryStats={'IdentityMetric':{}})
+metricDict = makeDict(m1,m2,m3,m4,m5)
+binner = makeBinnerConfig('UniBinner', metricDict=metricDict, constraints=constraints)
+binList.append(binner)
 
 
 root.binners=makeDict(*binList)

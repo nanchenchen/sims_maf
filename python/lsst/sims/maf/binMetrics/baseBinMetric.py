@@ -326,7 +326,7 @@ class BaseBinMetric(object):
                   
     def plotAll(self, outDir='./', savefig=True, closefig=False, outfileRoot=None, verbose=False):
         """Plot histograms and skymaps (where relevant) for all metrics."""
-        for mname in self.metricValues:            
+        for mname in self.metricValues:
             if verbose:
                 print 'Plotting %s' %(mname)
             try:
@@ -340,6 +340,7 @@ class BaseBinMetric(object):
 
     def plotMetric(self, metricName, savefig=True, outDir=None, outfileRoot=None):
         """Create all plots for 'metricName' ."""
+        
         # Check that metricName refers to plottable ('float') data.
         if not ((self.metricValues[metricName].dtype == 'float') or 
                 (self.metricValues[metricName].dtype=='int') or (self.binner.binnerName == 'HourglassBinner')):

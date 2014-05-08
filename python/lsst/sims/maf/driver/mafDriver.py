@@ -196,7 +196,7 @@ class MafDriver(object):
                         # Replace the plotParams for selected metricNames
                         for mName in binner.plotConfigs:
                             gm.plotParams[mName] = readPlotConfig(binner.plotConfigs[mName])
-                        gm.plotAll(outDir=self.config.outputDir, savefig=True, closefig=True, verbose=True)
+                        gm.plotAll(outDir=self.config.outputDir, savefig=True, closefig=True, verbose=False)
                         # Loop through the metrics and calc any summary statistics
                         for i,metric in enumerate(self.metricList[binner.index]):
                             if hasattr(metric, 'summaryStats'):
@@ -210,10 +210,10 @@ class MafDriver(object):
                                             summary = gm.computeSummaryStatistics(mm, stat)
                                             if type(summary).__name__ == 'float' or type(summary).__name__ == 'int':
                                                 summary = np.array(summary)
-                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(summary))
+                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(np.array(summary)))
                                     else:
                                         summary = gm.computeSummaryStatistics(metric.name, stat)
-                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(summary))
+                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(np.array(summary)))
                         gm.writeAll(outDir=self.config.outputDir)
                         # Return Output Files - get file output key back. Verbose=True, prints to screen.
                         outFiles = gm.returnOutputFiles(verbose=False)

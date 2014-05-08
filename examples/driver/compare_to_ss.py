@@ -84,15 +84,17 @@ for f in filters:
     
 # Number of Visits per observing mode:
 for f in filters:    
-        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50}, summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'CountMetric':{}})
+        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50}, summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'CountMetric':{}, 'NOutliers':{'nsigma':3.}})
         metricDict = makeDict(m1)
         constraints=[]
         for propid in propids:
             constraints.append("filter = \'%s\' and propID = %s" %(f,propid))
         binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=constraints)
         binList.append(binner)
-                                    
-        
+# Also for all observations
+binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=[''])
+binList.append(binner)
+       
 # Slew histograms
 m1 = makeMetricConfig('CountMetric', params=['slewTime'], kwargs={'metadata':'time'})
 binner = makeBinnerConfig('OneDBinner', kwargs={"sliceDataColName":'slewTime'}, metricDict=makeDict(m1), constraints=[''] )

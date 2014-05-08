@@ -79,7 +79,7 @@ for f in filters:
     
 # Number of Visits per observing mode:
 for f in filters:    
-        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50})
+        m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisitsperprop'}, plotDict={'units':'Number of Visits', 'histBins':50},summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'CountMetric':{}, 'NOutliers':{'nsigma':3.}} )
         metricDict = makeDict(m1)
         constraints=[]
         for propid in propids:

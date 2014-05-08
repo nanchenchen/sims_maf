@@ -126,6 +126,12 @@ class BaseSpatialBinner(BaseBinner):
                 histRange = [metricValue.min()-1 , metricValue.min() + 1]
                 warnings.warn('Max (%f) of metric Values was less than or equal to min (%f). Using (min value/min value + 1) as a backup for histRange.'% (metricValue.max(), metricValue.min()))
 
+        # Need to catch if data not in histRange
+        if histRange is not None:
+            willPlot = np.where( (metricValue.compressed() > histRange[0]) & (metricValue.compressed() < histRange[1]))[0]
+            if np.size(willPlot) == 0:
+                warnings.warn('No metricValues in histRange, not plotting histogram.')
+                return
         n, b, p = plt.hist(metricValue.compressed(), bins=bins, histtype='step', log=ylog,
                            cumulative=cumulative, range=histRange, label=label, color=color)        
         # Option to use 'scale' to turn y axis into area or other value.

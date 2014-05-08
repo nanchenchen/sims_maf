@@ -10,7 +10,18 @@ class SummaryMetrics(BaseMetric):
     def run(self, dataSlice):
         raise NotImplementedError()
 
-    
+
+class NOutliers(SummaryMetrics):
+    """Number of outliers. """
+    def __init__(self, colname, nsigma=3.):
+        self.nsigma=nsigma
+        super(NOutliers,self).__init__([colname])
+
+    def run(self, dataSlice):
+        result = np.array([np.size(np.where(dataSlice[self.colname] <  dataSlice[self.colname].mean()-self.nsigma*dataSlice[self.colname].std())[0]), np.size(np.where(dataSlice[self.colname] > dataSlice[self.colname].mean()+self.nsigma*dataSlice[self.colname].std())[0]) ])
+        return result
+                                
+                                    
 class TableFractionMetric(SimpleScalarMetric):
     def __init__(self, colname, nbins=10):
         """nbins = number of bins between 0 and 100.  100 must be evenly divisable by nbins. """

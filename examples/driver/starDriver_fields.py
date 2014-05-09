@@ -110,7 +110,7 @@ binList.append(binner)
 nights = range(0,3650,365)
 constraints=[]
 for i in range(1,9,1):
-    constraints.append(' night >= %i  night <= %i'%(nights[i-1],nights[i]))
+    constraints.append(' night >= %i  and night <= %i'%(nights[i-1],nights[i]))
 
 m1=makeMetricConfig('HourglassMetric')
 binner = makeBinnerConfig('HourglassBinner', metricDict=makeDict(m1), constraints=constraints)

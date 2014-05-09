@@ -48,7 +48,8 @@ for f in filters:
                           plotDict={'normVal':nvisitBench[f], 'ylog':False, 'units':'Number of Visits/Benchmark (%d)' %(nvisitBench[f])})
     m3 = makeMetricConfig('MedianMetric', params=['5sigma_modified'])
     m4 = makeMetricConfig('Coaddm5Metric', plotDict={'zp':mag_zpoints[f], 'percentileClip':95., 'units':'Co-add (m5 - %.1f)'%mag_zpoints[f]},
-                          histMerge={'histNum':6, 'legendloc':'upper right', 'color':colors[f],'label':'%s'%f} )             
+                          histMerge={'histNum':6, 'legendloc':'upper right', 'color':colors[f],'label':'%s'%f},
+                          summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'NOutliersMetric':{}, 'CountMetric':{}} )             
     m5 = makeMetricConfig('MedianMetric', params=['perry_skybrightness'], plotDict={'zp':sky_zpoints[f], 'units':'Skybrightness - %.2f' %(sky_zpoints[f])})
     m6 = makeMetricConfig('MedianMetric', params=['finSeeing'], plotDict={'normVal':seeing_norm[f], 'units':'Median Seeing/(Expected seeing %.2f)'%(seeing_norm[f])})
     m7 = makeMetricConfig('MedianMetric', params=['airmass'], plotDict={'_unit':'X'})
@@ -57,6 +58,9 @@ for f in filters:
     binner = makeBinnerConfig('OpsimFieldBinner', metricDict=metricDict, constraints=["filter = \'%s\'"%f])
     binList.append(binner)
 
+binner = makeBinnerConfig('OpsimFieldBinner', metricDict=makeDict(m4), constraints=[""])
+binList.append(binner)
+    
 # Metrics per filter, WFD only
 for f in filters:
     m1 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'Nvisits'}, 
@@ -123,20 +127,26 @@ for f in filters:
     binner = makeBinnerConfig('UniBinner', metricDict=makeDict(m1), constraints=['filter = "%s"'%f])
     binList.append(binner)
 
-#stats for single visit depths by filter and propID
+#stats by filter and propID
 constraints=[]
 for f in filters:
     constraints.append("filter = '%s'"%(f))
     for ID in propids:
         constraints.append("filter = '%s' and propID = %i"%(f,ID))
 constraints.append('')
-        
-m1 = makeMetricConfig('MedianMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Median'}, summaryStats={'IdentityMetric':{}})
-m2 = makeMetricConfig('MeanMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Mean'},summaryStats={'IdentityMetric':{}})
-m3 = makeMetricConfig('RmsMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Rms'},summaryStats={'IdentityMetric':{}})
-m4 = makeMetricConfig('NOutliersMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Outliers'},summaryStats={'IdentityMetric':{}})
-m5 = makeMetricConfig('CountMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Count'},summaryStats={'IdentityMetric':{}})
-metricDict = makeDict(m1,m2,m3,m4,m5)
+
+# make the table numbers:
+params = ['5sigma_modified', 'perry_skybrightness', 'finSeeing','airmass']
+names = ['sv_depth', 'sky_brightness', 'Seeing','Airmass']
+metricList=[]
+for name,param in zip(names,params):
+    metricList.append( makeMetricConfig('MedianMetric', params=[param], kwargs={'metricName':'%s_Median'%name}, summaryStats={'IdentityMetric':{}}) )
+    metricList.append( makeMetricConfig('MeanMetric', params=[param], kwargs={'metricName':'%s_Mean'%name},summaryStats={'IdentityMetric':{}}) )
+    metricList.append( makeMetricConfig('RmsMetric', params=[param], kwargs={'metricName':'%s_Rms'%name},summaryStats={'IdentityMetric':{}}) )
+    metricList.append( makeMetricConfig('NOutliersMetric', params=[param], kwargs={'metricName':'%s_Outliers'%name},summaryStats={'IdentityMetric':{}}) )
+    metricList.append( makeMetricConfig('CountMetric', params=[param], kwargs={'metricName':'%s_Count'%name},summaryStats={'IdentityMetric':{}}) )
+    
+metricDict = makeDict(*metricList)
 binner = makeBinnerConfig('UniBinner', metricDict=metricDict, constraints=constraints)
 binList.append(binner)
 

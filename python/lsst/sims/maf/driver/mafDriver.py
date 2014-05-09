@@ -210,10 +210,10 @@ class MafDriver(object):
                                             summary = gm.computeSummaryStatistics(mm, stat)
                                             if type(summary).__name__ == 'float' or type(summary).__name__ == 'int':
                                                 summary = np.array(summary)
-                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(summary))
+                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(np.array(summary)))
                                     else:
                                         summary = gm.computeSummaryStatistics(metric.name, stat)
-                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(summary))
+                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(np.array(summary)))
                         gm.writeAll(outDir=self.config.outputDir)
                         # Return Output Files - get file output key back. Verbose=True, prints to screen.
                         outFiles = gm.returnOutputFiles(verbose=False)

@@ -6,6 +6,7 @@ class SummaryMetrics(BaseMetric):
     """A class for metrics which are intended to be primarily used as summary statistics on other metrics.  SimpleScalarMetrics can be used as well, but since they can return more than a scalar, they should not be placed with the SimpleMetrics."""
     def __init__(self, cols, *args,**kwargs):
         super(SummaryMetrics, self).__init__(cols,*args,**kwargs)
+        #self.metricDtype = 'float'
 
     def run(self, dataSlice):
         raise NotImplementedError()
@@ -19,12 +20,13 @@ class NOutliersMetric(SummaryMetrics):
         self.colname = colname
 
     def run(self, dataSlice):
-        result = np.array([np.size(np.where(dataSlice[self.colname] <  dataSlice[self.colname].mean()-self.nsigma*dataSlice[self.colname].std())[0]), np.size(np.where(dataSlice[self.colname] > dataSlice[self.colname].mean()+self.nsigma*dataSlice[self.colname].std())[0]) ])
+        result = [np.size(np.where(dataSlice[self.colname] <  dataSlice[self.colname].mean()-self.nsigma*dataSlice[self.colname].std())[0]), np.size(np.where(dataSlice[self.colname] > dataSlice[self.colname].mean()+self.nsigma*dataSlice[self.colname].std())[0]) ]
         return result
 
 class PercentilesMetric(SummaryMetrics):
-    def __init__(self, colname, **kwargs):
-        super(SummaryMetrics, self).__init__(colname, **kwargs)
+    def __init__(self,colname, **kwargs):
+        super(PercentilesMetric,self).__init__([colname], **kwargs)
+        self.colname = colname
     def run(self, dataSlice):
         result = np.percentile(dataSlice[self.colname], [25.,50.,75.])
         return result

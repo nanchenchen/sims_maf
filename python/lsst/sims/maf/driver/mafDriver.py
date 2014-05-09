@@ -202,7 +202,7 @@ class MafDriver(object):
                             if hasattr(metric, 'summaryStats'):
                                 for stat in metric.summaryStats:
                                     # If it's a complex metric, run summary stats on each reduced metric
-                                    if metric.metricDtype == 'object':
+                                    if (metric.metricDtype == 'object') & (stat.name != 'Identity metricdata'): #ugh, this is a bit hackish.
                                         baseName = gm.metricNames[i]
                                         all_names = gm.metricValues.keys()
                                         matching_metrics = [x for x in all_names if x[:len(baseName)] == baseName and x != baseName]
@@ -210,10 +210,10 @@ class MafDriver(object):
                                             summary = gm.computeSummaryStatistics(mm, stat)
                                             if type(summary).__name__ == 'float' or type(summary).__name__ == 'int':
                                                 summary = np.array(summary)
-                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(np.array(summary)))
+                                            summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+mm +','+stat.name+','+ np.array_str(summary))
                                     else:
                                         summary = gm.computeSummaryStatistics(metric.name, stat)
-                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(np.array(summary)))
+                                        summary_stats.append(opsimName+','+binner.binnertype+','+constr+','+ metric.name +','+stat.name+','+ np.array_str(summary))
                         gm.writeAll(outDir=self.config.outputDir)
                         # Return Output Files - get file output key back. Verbose=True, prints to screen.
                         outFiles = gm.returnOutputFiles(verbose=False)

@@ -23,7 +23,8 @@ else:
 
 filters = ['u','g','r','i','z','y']
 colors={'u':'m','g':'b','r':'g','i':'y','z':'Orange','y':'r'}
-#filters=['r']
+filters=['r']
+propids=[188]
 
 # 10 year Design Specs
 nvisitBench={'u':56,'g':80, 'r':184, 'i':184, 'z':160, 'y':160} 
@@ -54,7 +55,8 @@ m2 = makeMetricConfig('MeanMetric', params=['5sigma_modified'], kwargs={'metricN
 m3 = makeMetricConfig('RmsMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Rms'},summaryStats={'IdentityMetric':{}})
 m4 = makeMetricConfig('NOutliersMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Outliers'},summaryStats={'IdentityMetric':{}})
 m5 = makeMetricConfig('CountMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_Count'},summaryStats={'IdentityMetric':{}})
-metricDict = makeDict(m1,m2,m3,m4,m5)
+m6 = makeMetricConfig('PercentilesMetric', params=['5sigma_modified'], kwargs={'metricName':'depth_percentiles'},summaryStats={'IdentityMetric':{}})
+metricDict = makeDict(m4,m6)
 binner = makeBinnerConfig('UniBinner', metricDict=metricDict, constraints=constraints)
 binList.append(binner)
 

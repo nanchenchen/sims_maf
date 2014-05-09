@@ -46,7 +46,6 @@ for f in filters:
                           plotDict={'normVal':nvisitBench[f], 'ylog':False, 'units':'Number of Visits/Benchmark (%d)' %(nvisitBench[f])})
     m3 = makeMetricConfig('MedianMetric', params=['5sigma_ps'])
     m4 = makeMetricConfig('Coaddm5Metric', kwargs={'m5col':'5sigma_ps'}, plotDict={'zp':mag_zpoints[f], 'percentileClip':95., 'units':'Co-add (m5 - %.1f)'%mag_zpoints[f]},
-                          histMerge={'histNum':6, 'legendloc':'upper right', 'color':colors[f],'label':'%s'%f},
                           summaryStats={'MedianMetric':{}, 'MeanMetric':{}, 'RmsMetric':{}, 'NOutliersMetric':{}, 'CountMetric':{}} )             
     m5 = makeMetricConfig('MedianMetric', params=['perry_skybrightness'], plotDict={'zp':sky_zpoints[f], 'units':'Skybrightness - %.2f' %(sky_zpoints[f])})
     m6 = makeMetricConfig('MedianMetric', params=['finSeeing'], plotDict={'normVal':seeing_norm[f], 'units':'Median Seeing/(Expected seeing %.2f)'%(seeing_norm[f])})
@@ -68,7 +67,9 @@ for f in filters:
     m2 = makeMetricConfig('CountMetric', params=['expMJD'], kwargs={'metricName':'NVisitsRatio'},
                           plotDict={'normVal':nvisitBench[f], 'percentileClip':80., 'units':'Number of Visits/Benchmark (%d)' %(nvisitBench[f])})
     m3 = makeMetricConfig('MedianMetric', params=['5sigma_ps'])
-    m4 = makeMetricConfig('Coaddm5Metric', kwargs={'m5col':'5sigma_ps'}, plotDict={'zp':mag_zpoints[f], 'percentileClip':95., 'units':'Co-add (m5 - %.1f)'%mag_zpoints[f]})             
+    m4 = makeMetricConfig('Coaddm5Metric', kwargs={'m5col':'5sigma_ps'},
+                          plotDict={'zp':mag_zpoints[f], 'percentileClip':95., 'units':'Co-add (m5 - %.1f)'%mag_zpoints[f]},
+                          histMerge={'histNum':6, 'legendloc':'upper right', 'color':colors[f],'label':'%s'%f})             
     m5 = makeMetricConfig('MedianMetric', params=['perry_skybrightness'], plotDict={'zp':sky_zpoints[f], 'units':'Skybrightness - %.2f' %(sky_zpoints[f])})
     m6 = makeMetricConfig('MedianMetric', params=['finSeeing'], plotDict={'normVal':seeing_norm[f], 'units':'Median Seeing/(Expected seeing %.2f)'%(seeing_norm[f])})
     m7 = makeMetricConfig('MedianMetric', params=['airmass'], plotDict={'_unit':'X'})
@@ -104,8 +105,13 @@ binner = makeBinnerConfig('OneDBinner', kwargs={"sliceDataColName":'slewDist'}, 
 binList.append(binner)
 
 # Filter Hourglass plots
+nights = range(0,3650,365)
+constraints=[]
+for i in range(1,9,1):
+    constraints.append(' night >= %i  night <= %i'%(nights[i-1],nights[i]))
+
 m1=makeMetricConfig('HourglassMetric')
-binner = makeBinnerConfig('HourglassBinner', metricDict=makeDict(m1), constraints=['night < 750',''])
+binner = makeBinnerConfig('HourglassBinner', metricDict=makeDict(m1), constraints=constraints)
 binList.append(binner)
 
 

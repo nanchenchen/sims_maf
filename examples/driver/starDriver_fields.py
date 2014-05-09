@@ -107,9 +107,9 @@ binner = makeBinnerConfig('OneDBinner', kwargs={"sliceDataColName":'slewDist'}, 
 binList.append(binner)
 
 # Filter Hourglass plots
-nights = range(0,3650,365)
+nights = range(0,3651,365)
 constraints=[]
-for i in range(1,9,1):
+for i in range(1,11,1):
     constraints.append(' night >= %i  and night <= %i'%(nights[i-1],nights[i]))
 
 m1=makeMetricConfig('HourglassMetric')

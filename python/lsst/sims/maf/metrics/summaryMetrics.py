@@ -21,7 +21,7 @@ class NOutliersMetric(SummaryMetrics):
 
     def run(self, dataSlice):
         result = [np.size(np.where(dataSlice[self.colname] <  dataSlice[self.colname].mean()-self.nsigma*dataSlice[self.colname].std())[0]), np.size(np.where(dataSlice[self.colname] > dataSlice[self.colname].mean()+self.nsigma*dataSlice[self.colname].std())[0]) ]
-        return result
+        return np.array(result)
 
 class PercentilesMetric(SummaryMetrics):
     def __init__(self,colname, **kwargs):

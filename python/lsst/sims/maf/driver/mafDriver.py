@@ -148,6 +148,7 @@ class MafDriver(object):
         """Loop over each binner and calc metrics for that binner. """
         summary_stats=[]
         summary_stats.append('##opsimname,binner_name,sql_where,metric_name,summary_stat_name,value')
+        allOutfiles = []
         #for opsimName in self.config.opsimNames:
         for j, constr in enumerate(self.constraints):
             # Find which binners have a matching constraint 
@@ -220,6 +221,9 @@ class MafDriver(object):
                     # Return Output Files - get file output key back. Verbose=True, prints to screen.
                     outFiles = gm.returnOutputFiles(verbose=False)
                     # Loop through the outFiles and attach them to the correct metric in self.metricList.  This would probably be better with a dict.
+                    for filedict in outFiles:
+                        allOutfiles.append(filedict)
+
                     outfile_names = []
                     outfile_metricNames = []
                     for outfile in outFiles:

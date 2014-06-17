@@ -5,6 +5,7 @@ import lsst.sims.maf.utils as utils
 root.outputDir ='./Cadence'
 root.dbAddress = {'dbAddress':'sqlite:///opsimblitz2_1060_sqlite.db'}#, 'OutputTable':'output'}
 root.opsimName = 'ob2_1060'
+root.verbose = True
 
 # Connect to the database to fetch some values we're using to help configure the driver.                                                             
 opsimdb = utils.connectOpsimDb(root.dbAddress)
@@ -41,7 +42,7 @@ leafsize = 100 # For KD-tree
 seeing_limit = 0.7 # Demand seeing better than this
 for f in filters:
     m1 = configureMetric('BinaryMetric', params=['finSeeing'], summaryStats={'SumMetric':{}})
-    binner = configureBinner('HealpixBinner',kwargs={"nside":nside},metricDict=makeDict(m1),
+    binner = configureBinner('HealpixBinner',kwargs={"nside":nside, 'useCache':False},metricDict=makeDict(m1),
                               constraints=['night < 365 and filter = "%s" and finSeeing < %s'%(f,seeing_limit),
                                            'night < 730 and filter = "%s" and finSeeing < %s'%(f,seeing_limit),
                                            'filter = "%s" and finSeeing < %s'%(f,seeing_limit)],
@@ -53,7 +54,7 @@ for f in filters:
     m1 = configureMetric('TemplateExistsMetric')
     m2 = configureMetric('MinMetric', params=['finSeeing'])
     m3 = configureMetric('FracBelowMetric', params=['finSeeing'], kwargs={'cutoff':seeing_limit})
-    binner = configureBinner('HealpixBinner',kwargs={"nside":nside},metricDict=makeDict(m1,m2,m3),
+    binner = configureBinner('HealpixBinner',kwargs={"nside":nside, 'useCache':True},metricDict=makeDict(m1,m2,m3),
                               constraints=['night < 365 and filter = "%s"'%(f),
                                            'night < 730 and filter = "%s"'%(f),
                                            'filter = "%s"'%(f)],
@@ -72,8 +73,9 @@ m6 = configureMetric('ProperMotionMetric', plotDict={'percentileClip':95})
 m7 = configureMetric('ProperMotionMetric', kwargs={'rmag':24, 'metricName':'PM_24'}, plotDict={'percentileClip':95})
 m8 = configureMetric('ProperMotionMetric', kwargs={'normalize':True, 'metricName':'PM_normed'})
 m9 = configureMetric('ProperMotionMetric', kwargs={'rmag':24,'normalize':True, 'metricName':'PM_24_normed'})
-binner =  configureBinner('HealpixBinner', kwargs={"nside":nside},
-                           metricDict=makeDict(m1,m2,m3,m4,m5),
+m10 = configureMetric('VisitGroupsMetric')
+binner =  configureBinner('HealpixBinner', kwargs={"nside":nside, 'useCache':True},
+                           metricDict=makeDict(m1,m2,m3,m4,m5,m6,m7,m8,m9,m10),
                            constraints=['night < 365', ''], setupKwargs={"leafsize":leafsize})
 binList.append(binner)
 
@@ -85,7 +87,7 @@ for f in filters:
 constraints.append('')
 constraints.append('night < 365')
 m1 = configureMetric('UniformityMetric', plotDict={'plotMin':0., 'plotMax':1.})
-binner = configureBinner('HealpixBinner', kwargs={"nside":nside},
+binner = configureBinner('HealpixBinner', kwargs={"nside":nside, 'useCache':True},
                            metricDict=makeDict(m1),
                            constraints=constraints, setupKwargs={"leafsize":leafsize})
 binList.append(binner)

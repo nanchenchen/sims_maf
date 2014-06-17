@@ -5,7 +5,7 @@ from lsst.sims.maf.driver.mafConfig import MafConfig, configureBinner, configure
 import lsst.sims.maf.utils as utils
 
 
-def mafConfig(config, runName, dbDir='.', outputDir='Out', binnerName='OpsimFieldBinner', **kwargs):
+def mafConfig(config, runName, dbDir='.', outputDir='Out', binnerName='HealpixBinner', **kwargs):
     """
     Set up a MAF config for SSTAR-like analysis of an opsim run.
     Use 'binnerName' for metrics where have the option of using [HealpixBinner, OpsimFieldBinner, or HealpixBinnerDither] 

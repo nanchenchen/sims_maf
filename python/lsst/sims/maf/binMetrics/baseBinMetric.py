@@ -219,14 +219,14 @@ class BaseBinMetric(object):
             else:
                if cache:
                   # make the idxs hashable
-                  key = str(idxs)[1:-1].replace(' ','')
+                  key = str(sorted(idxs))[1:-1].replace(' ','')
                   # If key exists, set flag to use it, otherwise add it
                   if key in cacheDict:
                      useCache = True 
                   else:
                      cacheDict[key] = i
                      useCache = False
-                     if i > self.binner.cacheSize:
+                     if len(cacheDict) > self.binner.cacheSize:
                         pop = cacheDict.popitem(last=False) #remove 1st item
                   for mname in self.metricObjs:
                      # If the metric needs binner metadata, need to compute

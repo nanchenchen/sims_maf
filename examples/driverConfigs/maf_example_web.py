@@ -1,18 +1,17 @@
 import numpy as np
 from lsst.sims.maf.driver.mafConfig import configureSlicer, configureMetric, makeDict
 # A drive config for the plots on https://confluence.lsstcorp.org/display/SIM/MAF+documentation
-# and https://confluence.lsstcorp.org/display/SIM/MAF%3A++Writing+a+new+metric
 
 root.outputDir = './Doc'
 root.dbAddress = {'dbAddress':'sqlite:///../../tests/opsimblitz1_1131_sqlite.db'}
-root.opsimName = 'opsim'
+root.opsimName = 'opsimblitz1_1131'
 
 
 
 slicerList=[]
 
-m1 = configureMetric('CountMetric', params=['slewTime'], kwargs={'metadata':'time'})
-slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewTime'}, metricDict=makeDict(m1), constraints=[''] )
+m1 = configureMetric('CountMetric', params=['slewTime'], kwargs={'metadata':'time'}, plotDict={'ylog':True})
+slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewTime', 'binsize':5}, metricDict=makeDict(m1), constraints=[''] )
 root.slicers=makeDict(slicer)
 slicerList.append(slicer)
 
@@ -42,8 +41,8 @@ root.slicers=makeDict(slicer)
 slicerList.append(slicer)
 
 
-m1 = configureMetric('CountMetric', params=['slewDist'], kwargs={'metadata':'dist'})
-slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewDist'}, metricDict=makeDict(m1), constraints=[''] )
+m1 = configureMetric('CountMetric', params=['slewDist'], kwargs={'metadata':'dist'}, plotDict={'ylog':True})
+slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewDist', 'binsize':0.07}, metricDict=makeDict(m1), constraints=[''] )
 root.slicers=makeDict(slicer)
 slicerList.append(slicer)
 
@@ -68,20 +67,11 @@ slicerList.append(slicer)
 
 
 
-m1 = configureMetric('AstroPrecMetric')
-m2 = configureMetric('AstroPrecMetricComplex')
-slicer = configureSlicer('HealpixSlicer',
-                          kwargs={"nside":nside,'spatialkey1':"fieldRA", 'spatialkey2':"fieldDec"},
-                          metricDict = makeDict(m1,m2),constraints=constraints)
-slicerList.append(slicer)
-
-
-
 # Example of doing summary stats:
 nside=64
 constraints = ["filter = \'%s\'"%'r']
 m2 = configureMetric('Coaddm5Metric', plotDict={'zp':27., 'percentileClip':95, 'units':'Co-add m5 - %.1f'%27.}, kwargs={'metricName':'coadd_w_summary'}, summaryStats={'MeanMetric':{}, 'MinMetric':{}, 'MaxMetric':{}, 'RmsMetric':{}} )          
-metricDict = makeDict(m2
+metricDict = makeDict(m2)
 slicer = configureSlicer('HealpixSlicer',
                           kwargs={"nside":nside,'spatialkey1':"fieldRA", 'spatialkey2':"fieldDec"},
                           metricDict = metricDict,constraints=constraints)

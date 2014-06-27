@@ -20,7 +20,7 @@ slicerList=[]
 nside=128
 
 # List of SQL constraints.  If multiple constraints are listed in a slicer object, they are looped over and each one is executed individualy.  
-constraints = ["filter = \'%s\'"%'r', "filter = \'%s\' and night < 730"%'r']
+constraints = ["filter = \'%s\'"%'r', "filter = \'%s\' and night < 150"%'r']
 
 # Configure a Healpix slicer:
 # Configure 2 metrics to run on the Healpix slicer.  
@@ -48,7 +48,7 @@ slicerList.append(slicer)
 # Configure a new metric
 m1 = configureMetric('CountMetric', params=['slewDist'], plotDict={'ylog':True})
 metricDict=makeDict(m1)
-slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewDist'},
+slicer = configureSlicer('OneDSlicer', kwargs={"sliceColName":'slewDist', 'binsize':.1},
                           metricDict=metricDict, constraints=constraints)
 slicerList.append(slicer)
 
@@ -65,12 +65,12 @@ slicerList.append(slicer)
 
 # Configure a UniSlicer.  Note new SQL constraints are passed
 m1 = configureMetric('MeanMetric', params=['airmass'])
-slicer = configureSlicer('UniSlicer', metricDict=makeDict(m1), constraints=['night < 750'] )
+slicer = configureSlicer('UniSlicer', metricDict=makeDict(m1), constraints=['night < 150'] )
 slicerList.append(slicer)
 
 # Configure an Hourglass filter slicer/metric
 m1=configureMetric('HourglassMetric')
-slicer = configureSlicer('HourglassSlicer', metricDict=makeDict(m1), constraints=['night < 750',''])
+slicer = configureSlicer('HourglassSlicer', metricDict=makeDict(m1), constraints=['night < 150',''])
 slicerList.append(slicer)
 
 

@@ -7,6 +7,8 @@ from lsst.sims.maf.driver.mafConfig import configureSlicer, configureMetric, mak
 root.outputDir = './Doc'
 root.dbAddress = {'dbAddress':'sqlite:///opsimblitz2_1060_sqlite.db'}
 root.opsimName = 'opsimblitz2_1060'
+root.figformat ='png'
+root.dpi=200
 
 root.figformat='png'
 

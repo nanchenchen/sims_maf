@@ -10,6 +10,9 @@ from lsst.sims.maf.driver.mafConfig import configureSlicer, configureMetric, mak
 root.outputDir = './Allslicers'
 root.dbAddress = {'dbAddress':'sqlite:///opsimblitz2_1060_sqlite.db'}
 root.opsimName = 'opsimblitz2_1060'
+root.figformat ='png'
+root.dpi=200
+
 
 root.verbose = True
 # getConfig copies OpSim configuration parameters into output directory (if True).

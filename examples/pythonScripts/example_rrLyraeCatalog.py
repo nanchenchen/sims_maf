@@ -49,16 +49,32 @@ for metaData in results:
     # Setup slicer (builds kdTree)
     slicer.setupSlicer(simdata)
     
-    for i,vps in enumerate(metaData['varParamStr']):
-        # Slice Point for index zero
-        ind = slicer._sliceSimData(i)
-        expMJDs = simdata[ind['idxs']]['expMJD']
-        print expMJDs
+    #loop over objects
+    for ii,vps in enumerate(metaData['varParamStr']):
         
-    
-    
-    
-    # Find the expMJDs for the 2nd point
-    ind = slicer._sliceSimData(1)
-    expMJDs = simdata[ind['idxs']]['expMJD']
-
+        print vps
+        
+        outputName = 'rrly_'+str(metaData[ii]['id'])+'light_curve.txt'
+        outputFile = open(outputName,'w')
+        # Slice Point for index zero
+        ind = slicer._sliceSimData(ii)
+        expMJDs = simdata[ind['idxs']]['expMJD']
+        expMJDs.sort()
+        for expmjd in expMJDs:
+            vv = varObj.calculate_stellar_variability(
+                               u0=[baselineMagnitudes[ii][0]],
+                               g0=[baselineMagnitudes[ii][1]],
+                               r0=[baselineMagnitudes[ii][2]],
+                               i0=[baselineMagnitudes[ii][3]],
+                               z0=[baselineMagnitudes[ii][4]],
+                               y0=[baselineMagnitudes[ii][5]],
+                               magNorm=metaData[ii]['magNorm'],
+                               varParams = [vps],
+                               expmjd=expmjd
+                               )
+        
+            outputFile.write("%.7f %f %f %f %f %f %f\n" %
+                            (expmjd,vv[0][0],vv[1][0],vv[2][0],
+                            vv[3][0],vv[4][0],vv[5][0]))
+            
+        outputFile.close()

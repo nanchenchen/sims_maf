@@ -18,14 +18,12 @@ class LightCurveGenerator(object):
             raise RuntimeError('must specify address for the OpSim database in LightCurveGenerator')
         self.dbAddress = address
 
-    def _connectToOpsim(self):
+    def _getPointings(self, filterName):
         self.opDB = db.OpsimDatabase(self.dbAddress)
         colnames = ['expMJD', 'fieldRA', 'fieldDec']
-        self.pointings = []
-        for filterName in self.filters:
-            sqlconstraint = 'filter="'+filterName+'"'
-            simdata = self.opDB.fetchMetricData(colnames, sqlconstraint)
-            self.pointings.append(simdata)
+        sqlconstraint = 'filter="'+filterName+'"'
+        pointings = self.opDB.fetchMetricData(colnames, sqlconstraint)
+        return pointings
 
     def _initializePhotometry(self):
         #initialize baseline (i.e. not variable) photometry
@@ -51,7 +49,7 @@ class LightCurveGenerator(object):
 
 
     def _writeFilter(self, iFilter, sedList=None, ra=None, dec=None, baselineMagnitudes=None, varParamStr=None, objectNames=None):
-        opsimData = self.pointings[iFilter]
+        opsimData = self._getPointings(self.filters[iFilter])
         # Init the slicer, set 2 points
         slicer = slicers.UserPointsSlicer(ra=ra, dec=dec)
         # Setup slicer (builds kdTree)
@@ -122,7 +120,6 @@ class LightCurveGenerator(object):
                               objectNames=stellarChunk['id'], varParamStr=stellarChunk['varParamStr'])
 
     def writeLightCurves(self):
-        self._connectToOpsim()
         self._initializePhotometry()
         for chunk in self.stellarResults:
             self._writeChunk(chunk)

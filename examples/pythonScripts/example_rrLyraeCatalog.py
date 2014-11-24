@@ -11,8 +11,6 @@ from lsst.sims.catalogs.measures.instance.fileMaps import defaultSpecMap
 class LightCurveGenerator(object):
 
     def __init__(self, address=None, filters=['u','g','r','i','z','y']):
-        self.stellarResults = None
-        self.pointings = None
         self.filters = filters
         if address is None:
             raise RuntimeError('must specify address for the OpSim database in LightCurveGenerator')

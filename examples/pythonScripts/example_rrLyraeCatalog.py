@@ -129,6 +129,14 @@ class LightCurveGenerator(object):
             expMJDs = opsimData[ind['idxs']]['expMJD']
             expMJDs.sort()
             for expmjd in expMJDs:
+            
+                #Because this code loops over objects in each filter individually
+                #and that could mean doing photometry calculations for essentially
+                #identical MJDs for the same object in different filters, we include
+                #the ability to cache calculated magnitudes and use them later when
+                #performing the caluculation for a different filter.  Observations
+                #separated in MJD by less than self.dt will be treated as identical
+                #for this purpose
                 if self.dt > 0.0:
                     iclosest = numpy.fabs(self.cachedMJD[ii] - expmjd).argmin()
 
@@ -163,11 +171,15 @@ class LightCurveGenerator(object):
 
 
     def _writeChunk(self, stellarChunk):
+        """
+        Write the light curves for objects in one chunk from the database of variable stars
+        """
         sedNames = stellarChunk['sedFilename']
         magNorms = stellarChunk['magNorm']
         sedList = self.photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)
         baselineMagnitudes = self.photObj.calculate_magnitudes(sedList)
         
+        #initialize the MJD/magnitude cache
         self.cachedMJD = []
         self.cachedMagnitudes = []
         dummyMag = []
@@ -184,6 +196,9 @@ class LightCurveGenerator(object):
                               objectNames=stellarChunk['id'], varParamStr=stellarChunk['varParamStr'])
 
     def writeLightCurves(self):
+        """
+        Write the light curves for this LightCurveGenerator
+        """
         self._initializePhotometry()
         for chunk in self.stellarResults:
             self._writeChunk(chunk)

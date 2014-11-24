@@ -54,7 +54,7 @@ class LightCurveGenerator(object):
         slicer = slicers.UserPointsSlicer(ra=ra, dec=dec)
         # Setup slicer (builds kdTree)
         slicer.setupSlicer(opsimData)
-    
+
         #loop over objects
         for ii,vps in enumerate(varParamStr):
             name = objectNames[ii]
@@ -69,7 +69,7 @@ class LightCurveGenerator(object):
                     iclosest = numpy.fabs(self.cachedMJD - expmjd).argmin()
                 else:
                     iclosest = None
-                    
+
                 if iclosest is not None:
                     if numpy.fabs(self.cachedMJD[iclosest] - expmjd) > 1.0e-6:
                         iclosest = None
@@ -98,18 +98,18 @@ class LightCurveGenerator(object):
                     for jj in range(len(self.filters)):
                          subList.append(vv[jj][0])
                     self.cachedMagnitudes.append(subList)
-                else: 
+                else:
                     mm = self.cachedMagnitudes[iclosest][iFilter]
-    
-    
+
+
                 outputFile.write("%.7f %f\n" % (expmjd,mm))
-            
+
             outputFile.close()
 
 
     def _writeChunk(self, stellarChunk):
         self.cachedMJD = None
-        self.cachedMagnitudes = [] 
+        self.cachedMagnitudes = []
         sedNames = stellarChunk['sedFilename']
         magNorms = stellarChunk['magNorm']
         sedList = self.photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)

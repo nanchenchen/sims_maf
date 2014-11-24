@@ -103,8 +103,8 @@ class LightCurveGenerator(object):
 
         param [in] objectNames is a list of unique identifiers for the stars
 
-        This method will write a series of light curves light_curve_##_ff.txt where ## is an integer indexing
-        the star and ff denotes the filter.
+        This method will write a series of light curves light_curve_##_ff.txt where ## is the object's unique name in the
+        variable star database and ff denotes the filter.
         """
 
         #first get all of the opsim pointings for the filter in question
@@ -121,7 +121,7 @@ class LightCurveGenerator(object):
         #loop over objects
         for ii,vps in enumerate(varParamStr):
             name = objectNames[ii]
-            outputName = 'light_curve_'+str(ii)+'_'+self.filters[iFilter]+'.txt'
+            outputName = 'light_curve_'+str(name)+'_'+self.filters[iFilter]+'.txt'
             outputFile = open(outputName,'w')
 
             # Find the opsim pointings that saw the object

@@ -25,7 +25,7 @@ class LightCurveGenerator(object):
         sims_catUtils/python/lsst/sims/catUtils/baseCatalogModels/StarModels.py
 
         param [in] filters is a list of filters for which to generate light curves
-        
+
         param [in] dt is a float; this is the largest difference in MJD that will be considered
         a different observation.  Observations separated by less than this amount of time
         will be assumed to be simultaneous (so that we don't need to continually re-calculate
@@ -129,7 +129,7 @@ class LightCurveGenerator(object):
             expMJDs = opsimData[ind['idxs']]['expMJD']
             expMJDs.sort()
             for expmjd in expMJDs:
-            
+
                 #Because this code loops over objects in each filter individually
                 #and that could mean doing photometry calculations for essentially
                 #identical MJDs for the same object in different filters, we include
@@ -178,7 +178,7 @@ class LightCurveGenerator(object):
         magNorms = stellarChunk['magNorm']
         sedList = self.photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)
         baselineMagnitudes = self.photObj.calculate_magnitudes(sedList)
-        
+
         #initialize the MJD/magnitude cache
         self.cachedMJD = []
         self.cachedMagnitudes = []
@@ -189,7 +189,7 @@ class LightCurveGenerator(object):
             dummy = numpy.array([-1.0])
             self.cachedMJD.append(dummy)
             self.cachedMagnitudes.append(dummyMag)
-        
+
         for iFilter in range(len(self.filters)):
             self._writeFilter(iFilter,sedList=sedList, baselineMagnitudes=baselineMagnitudes,
                               ra=stellarChunk['raJ2000'], dec=stellarChunk['decJ2000'],

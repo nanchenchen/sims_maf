@@ -15,7 +15,7 @@ class LightCurveGenerator(object):
     stellar database based on when the star was visible to the opsim cadence.
     """
 
-    def __init__(self, address=None, filters=['u','g','r','i','z','y'], stellarDBtype='rrlystars'):
+    def __init__(self, address=None, filters=['u','g','r','i','z','y'], stellarDBtype='rrlystars', dt=-1.0):
         """
         param [in] address is a string containing the connection string for the opsim database
 
@@ -25,9 +25,15 @@ class LightCurveGenerator(object):
         sims_catUtils/python/lsst/sims/catUtils/baseCatalogModels/StarModels.py
 
         param [in] filters is a list of filters for which to generate light curves
+        
+        param [in] dt is a float; this is the largest difference in MJD that will be considered
+        a different observation.  Observations separated by less than this amount of time
+        will be assumed to be simultaneous (so that we don't need to continually re-calculate
+        magnitudes that are basically identical)
         """
 
         self.filters = filters
+        self.dt = dt
         if address is None:
             raise RuntimeError('must specify address for the OpSim database in LightCurveGenerator')
         self.dbAddress = address
@@ -123,18 +129,12 @@ class LightCurveGenerator(object):
             expMJDs = opsimData[ind['idxs']]['expMJD']
             expMJDs.sort()
             for expmjd in expMJDs:
+                if self.dt > 0.0:
+                    iclosest = numpy.fabs(self.cachedMJD[ii] - expmjd).argmin()
 
+                if self.dt < 0.0 or self.cachedMJD[ii][iclosest] < 0.0 or \
+                                     numpy.fabs(self.cachedMJD[ii][iclosest] - expmjd) > self.dt:
 
-                if self.cachedMJD is not None:
-                    iclosest = numpy.fabs(self.cachedMJD - expmjd).argmin()
-                else:
-                    iclosest = None
-
-                if iclosest is not None:
-                    if numpy.fabs(self.cachedMJD[iclosest] - expmjd) > 1.0e-6:
-                        iclosest = None
-
-                if iclosest is None:
                     vv = self.varObj.calculate_stellar_variability(
                                        u0=[baselineMagnitudes[ii][0]],
                                        g0=[baselineMagnitudes[ii][1]],
@@ -148,19 +148,14 @@ class LightCurveGenerator(object):
                                        )
 
                     mm = vv[iFilter][0]
-
-                    if self.cachedMJD is not None:
-                         self.cachedMJD = numpy.append(self.cachedMJD, expmjd)
-                    else:
-                         self.cachedMJD = numpy.array([expmjd])
-
-                    subList = []
-                    for jj in range(len(self.filters)):
-                         subList.append(vv[jj][0])
-                    self.cachedMagnitudes.append(subList)
+                    if self.dt > 0.0:
+                        self.cachedMJD[ii] = numpy.append(self.cachedMJD[ii], expmjd)
+                        subList = []
+                        for jj in range(len(self.filters)):
+                            subList.append(vv[jj][0])
+                        self.cachedMagnitudes[ii].append(subList)
                 else:
-                    mm = self.cachedMagnitudes[iclosest][iFilter]
-
+                    mm = self.cachedMagnitudes[ii][iclosest][iFilter]
 
                 outputFile.write("%.7f %f\n" % (expmjd,mm))
 
@@ -168,12 +163,21 @@ class LightCurveGenerator(object):
 
 
     def _writeChunk(self, stellarChunk):
-        self.cachedMJD = None
-        self.cachedMagnitudes = []
         sedNames = stellarChunk['sedFilename']
         magNorms = stellarChunk['magNorm']
         sedList = self.photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)
         baselineMagnitudes = self.photObj.calculate_magnitudes(sedList)
+        
+        self.cachedMJD = []
+        self.cachedMagnitudes = []
+        dummyMag = []
+        for ii in range(len(self.filters)):
+            dummyMag.append(-100.0)
+        for ii in range(len(stellarChunk['raJ2000'])):
+            dummy = numpy.array([-1.0])
+            self.cachedMJD.append(dummy)
+            self.cachedMagnitudes.append(dummyMag)
+        
         for iFilter in range(len(self.filters)):
             self._writeFilter(iFilter,sedList=sedList, baselineMagnitudes=baselineMagnitudes,
                               ra=stellarChunk['raJ2000'], dec=stellarChunk['decJ2000'],
@@ -187,3 +191,4 @@ class LightCurveGenerator(object):
 
 myLC = LightCurveGenerator(address = 'sqlite:///../../../garage/OpSimData/opsimblitz2_1060_sqlite.db')
 myLC.writeLightCurves()
+

@@ -10,11 +10,12 @@ from lsst.sims.catalogs.measures.instance.fileMaps import defaultSpecMap
 
 class LightCurveGenerator(object):
 
-    def __init__(self, address=None, filters=['u','g','r','i','z','y']):
+    def __init__(self, address=None, filters=['u','g','r','i','z','y'], stellarDBtype='rrlystars'):
         self.filters = filters
         if address is None:
             raise RuntimeError('must specify address for the OpSim database in LightCurveGenerator')
         self.dbAddress = address
+        self.stellarDBtype = stellarDBtype
 
     def _getPointings(self, filterName):
         self.opDB = db.OpsimDatabase(self.dbAddress)
@@ -31,7 +32,7 @@ class LightCurveGenerator(object):
 
         self.varObj = Variability()
 
-        rrLyraeDB = CatalogDBObject.from_objid('rrlystars')
+        stellarDB = CatalogDBObject.from_objid(self.stellarDBtype)
         obs_metadata = ObservationMetaData(unrefractedRA=0.0, unrefractedDec=0.0,
                                    boundType='circle', boundLength=2.0)
 
@@ -40,9 +41,9 @@ class LightCurveGenerator(object):
                            ('varParamStr',str,256),('magNorm',float),('sedFilename',str,100),
                            ('distance',float)])
 
-        rrLyraeDB.dtype = dtype
+        stellarDB.dtype = dtype
 
-        self.stellarResults = rrLyraeDB.query_columns(colnames=colNames, obs_metadata=obs_metadata,
+        self.stellarResults = stellarDB.query_columns(colnames=colNames, obs_metadata=obs_metadata,
                                                       returnRecArray=True)
 
 
@@ -56,7 +57,7 @@ class LightCurveGenerator(object):
         #loop over objects
         for ii,vps in enumerate(varParamStr):
             name = objectNames[ii]
-            outputName = 'rrly_'+str(name)+'light_curve_'+self.filters[iFilter]+'.txt'
+            outputName = 'light_curve_'+str(ii)+'_'+self.filters[iFilter]+'.txt'
             outputFile = open(outputName,'w')
             # Slice Point for index zero
             ind = slicer._sliceSimData(ii)

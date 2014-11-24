@@ -8,73 +8,125 @@ from lsst.sims.catUtils.baseCatalogModels import *
 from lsst.sims.photUtils import PhotometryStars, Variability
 from lsst.sims.catalogs.measures.instance.fileMaps import defaultSpecMap
 
-# Connect to opsim
-dbAddress = 'sqlite:///../../../garage/OpSimData/opsimblitz2_1060_sqlite.db'
-oo = db.OpsimDatabase(dbAddress)
-colnames = ['expMJD', 'fieldRA', 'fieldDec']
-sqlconstraint ='filter="r"'
-# Get opsim simulation data
-simdata = oo.fetchMetricData(colnames, sqlconstraint)
+class LightCurveGenerator(object):
 
-#initialize baseline (i.e. not variable) photometry
-photObj = PhotometryStars()
-bandPassList = ['u', 'g', 'r', 'i', 'z', 'y']
-photObj.loadBandPassesFromFiles(bandPassList)
-photObj.setupPhiArray_dict()
+    def __init__(self, address=None, filters=['u','g','r','i','z','y']):
+        self.stellarResults = None
+        self.pointings = None
+        self.filters = filters
+        if address is None:
+            raise RuntimeError('must specify address for the OpSim database in LightCurveGenerator')
+        self.dbAddress = address
 
-varObj = Variability()
+    def _connectToOpsim(self):
+        self.opDB = db.OpsimDatabase(self.dbAddress)
+        colnames = ['expMJD', 'fieldRA', 'fieldDec']
+        self.pointings = []
+        for filterName in self.filters:
+            sqlconstraint = 'filter="'+filterName+'"'
+            simdata = self.opDB.fetchMetricData(colnames, sqlconstraint)
+            self.pointings.append(simdata)
 
-rrLyraeDB = CatalogDBObject.from_objid('rrlystars')
-obs_metadata = ObservationMetaData(unrefractedRA=0.0, unrefractedDec=0.0,
+    def _initializePhotometry(self):
+        #initialize baseline (i.e. not variable) photometry
+        self.photObj = PhotometryStars()
+        self.photObj.loadBandPassesFromFiles(self.filters)
+        self.photObj.setupPhiArray_dict()
+
+        self.varObj = Variability()
+
+        rrLyraeDB = CatalogDBObject.from_objid('rrlystars')
+        obs_metadata = ObservationMetaData(unrefractedRA=0.0, unrefractedDec=0.0,
                                    boundType='circle', boundLength=2.0)
 
-colNames = ['raJ2000', 'decJ2000','varParamStr','magNorm','sedFilename','distance']
-dtype = numpy.dtype([('id',int),('raJ2000',float),('decJ2000',float),
-                     ('varParamStr',str,256),('magNorm',float),('sedFilename',str,100),
-                     ('distance',float)])
+        colNames = ['raJ2000', 'decJ2000','varParamStr','magNorm','sedFilename','distance']
+        dtype = numpy.dtype([('id',int),('raJ2000',float),('decJ2000',float),
+                           ('varParamStr',str,256),('magNorm',float),('sedFilename',str,100),
+                           ('distance',float)])
 
-rrLyraeDB.dtype = dtype
+        rrLyraeDB.dtype = dtype
 
-results = rrLyraeDB.query_columns(colnames=colNames, obs_metadata=obs_metadata,
-                                returnRecArray=True)
+        self.stellarResults = rrLyraeDB.query_columns(colnames=colNames, obs_metadata=obs_metadata,
+                                                      returnRecArray=True)
 
-for metaData in results:
-    sedNames = metaData['sedFilename']
-    magNorms = metaData['magNorm']
-    sedList = photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)
-    baselineMagnitudes = photObj.calculate_magnitudes(sedList)
 
-    # Init the slicer, set 2 points
-    slicer = slicers.UserPointsSlicer(ra=metaData['raJ2000'], dec=metaData['decJ2000'])
-    # Setup slicer (builds kdTree)
-    slicer.setupSlicer(simdata)
+    def _writeFilter(self, iFilter, sedList=None, ra=None, dec=None, baselineMagnitudes=None, varParamStr=None, objectNames=None):
+        opsimData = self.pointings[iFilter]
+        # Init the slicer, set 2 points
+        slicer = slicers.UserPointsSlicer(ra=ra, dec=dec)
+        # Setup slicer (builds kdTree)
+        slicer.setupSlicer(opsimData)
     
-    #loop over objects
-    for ii,vps in enumerate(metaData['varParamStr']):
-        
-        print vps
-        
-        outputName = 'rrly_'+str(metaData[ii]['id'])+'light_curve.txt'
-        outputFile = open(outputName,'w')
-        # Slice Point for index zero
-        ind = slicer._sliceSimData(ii)
-        expMJDs = simdata[ind['idxs']]['expMJD']
-        expMJDs.sort()
-        for expmjd in expMJDs:
-            vv = varObj.calculate_stellar_variability(
-                               u0=[baselineMagnitudes[ii][0]],
-                               g0=[baselineMagnitudes[ii][1]],
-                               r0=[baselineMagnitudes[ii][2]],
-                               i0=[baselineMagnitudes[ii][3]],
-                               z0=[baselineMagnitudes[ii][4]],
-                               y0=[baselineMagnitudes[ii][5]],
-                               magNorm=metaData[ii]['magNorm'],
-                               varParams = [vps],
-                               expmjd=expmjd
-                               )
-        
-            outputFile.write("%.7f %f %f %f %f %f %f\n" %
-                            (expmjd,vv[0][0],vv[1][0],vv[2][0],
-                            vv[3][0],vv[4][0],vv[5][0]))
+        #loop over objects
+        for ii,vps in enumerate(varParamStr):
+            name = objectNames[ii]
+            outputName = 'rrly_'+str(name)+'light_curve_'+self.filters[iFilter]+'.txt'
+            outputFile = open(outputName,'w')
+            # Slice Point for index zero
+            ind = slicer._sliceSimData(ii)
+            expMJDs = opsimData[ind['idxs']]['expMJD']
+            expMJDs.sort()
+            for expmjd in expMJDs:
+                if self.cachedMJD is not None:
+                    iclosest = numpy.fabs(self.cachedMJD - expmjd).argmin()
+                else:
+                    iclosest = None
+                    
+                if iclosest is not None:
+                    if numpy.fabs(self.cachedMJD[iclosest] - expmjd) > 1.0e-6:
+                        iclosest = None
+
+                if iclosest is None:
+                    vv = self.varObj.calculate_stellar_variability(
+                                       u0=[baselineMagnitudes[ii][0]],
+                                       g0=[baselineMagnitudes[ii][1]],
+                                       r0=[baselineMagnitudes[ii][2]],
+                                       i0=[baselineMagnitudes[ii][3]],
+                                       z0=[baselineMagnitudes[ii][4]],
+                                       y0=[baselineMagnitudes[ii][5]],
+                                       magNorm=[0.0],
+                                       varParams = [vps],
+                                       expmjd=expmjd
+                                       )
+
+                    mm = vv[iFilter][0]
+
+                    if self.cachedMJD is not None:
+                         self.cachedMJD = numpy.append(self.cachedMJD, expmjd)
+                    else:
+                         self.cachedMJD = numpy.array([expmjd])
+
+                    subList = []
+                    for jj in range(len(self.filters)):
+                         subList.append(vv[jj][0])
+                    self.cachedMagnitudes.append(subList)
+                else: 
+                    mm = self.cachedMagnitudes[iclosest][iFilter]
+    
+    
+                outputFile.write("%.7f %f\n" % (expmjd,mm))
             
-        outputFile.close()
+            outputFile.close()
+
+
+    def _writeChunk(self, stellarChunk):
+        self.cachedMJD = None
+        self.cachedMagnitudes = [] 
+        sedNames = stellarChunk['sedFilename']
+        magNorms = stellarChunk['magNorm']
+        sedList = self.photObj.loadSeds(sedNames, magNorm=magNorms, specFileMap=defaultSpecMap)
+        baselineMagnitudes = self.photObj.calculate_magnitudes(sedList)
+        for iFilter in range(len(self.filters)):
+            self._writeFilter(iFilter,sedList=sedList, baselineMagnitudes=baselineMagnitudes,
+                              ra=stellarChunk['raJ2000'], dec=stellarChunk['decJ2000'],
+                              objectNames=stellarChunk['id'], varParamStr=stellarChunk['varParamStr'])
+
+    def writeLightCurves(self):
+        self._connectToOpsim()
+        self._initializePhotometry()
+        for chunk in self.stellarResults:
+            self._writeChunk(chunk)
+
+
+myLC = LightCurveGenerator(address = 'sqlite:///../../../garage/OpSimData/opsimblitz2_1060_sqlite.db')
+myLC.writeLightCurves()
